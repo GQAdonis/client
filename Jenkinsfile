@@ -756,15 +756,6 @@ def testGo(prefix, packagesToTest) {
         return
       }
 
-      println "Running go vet for ${pkg}"
-      sh "go vet ${pkg} || (ERR=\$? && echo \"go vet failed with error code \$ERR\" && exit \$ERR)"
-
-      if (isUnix()) {
-        // Windows `gofmt` pukes on CRLF, so only run on *nix.
-        println "Check that files are formatted correctly"
-        sh "test -z \$(gofmt -l \$(sed 's/github.com.keybase.client.go.//' ${pkg} ))"
-      }
-
       println "Building tests for ${testSpec.dirPath}"
       dir(testSpec.dirPath) {
         def testBinary = "${testSpec.name}.test"
