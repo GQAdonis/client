@@ -804,7 +804,7 @@ def testGo(prefix, packagesToTest) {
     def parallelTests = []
     def testBatch = [:]
     tests.each { name, closure ->
-      if (testBatch.size() == 4) {
+      if (testBatch.size() == 6) {
         parallelTests << testBatch
         testBatch = [:]
       }
