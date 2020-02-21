@@ -215,7 +215,6 @@ const saltpackEncrypt = async (
       try {
         const fileRes = await RPCTypes.saltpackSaltpackEncryptFileRpcPromise(
           {
-            destinationDir: '',
             filename: input.stringValue(),
             opts: {
               includeSelf: options.includeSelf,
@@ -236,7 +235,7 @@ const saltpackEncrypt = async (
         })
       } catch (err) {
         logger.error(err)
-        const message = Constants.getStatusCodeMessage(err.code, Constants.Operations.Encrypt, type)
+        const message = Constants.getStatusCodeMessage(err, Constants.Operations.Encrypt, type)
         return CryptoGen.createOnOperationError({
           errorMessage: new HiddenString(message),
           operation: Constants.Operations.Encrypt,
@@ -270,7 +269,7 @@ const saltpackEncrypt = async (
         })
       } catch (err) {
         logger.error(err)
-        const message = Constants.getStatusCodeMessage(err.code, Constants.Operations.Encrypt, type)
+        const message = Constants.getStatusCodeMessage(err, Constants.Operations.Encrypt, type)
         return CryptoGen.createOnOperationError({
           errorMessage: new HiddenString(message),
           operation: Constants.Operations.Encrypt,
@@ -293,10 +292,7 @@ const saltpackDecrypt = async (action: CryptoGen.SaltpackDecryptPayload, logger:
     case 'file': {
       try {
         const result = await RPCTypes.saltpackSaltpackDecryptFileRpcPromise(
-          {
-            destinationDir: '',
-            encryptedFilename: input.stringValue(),
-          },
+          {encryptedFilename: input.stringValue()},
           Constants.decryptFileWaitingKey
         )
         const {decryptedFilename, info, signed} = result
@@ -317,7 +313,7 @@ const saltpackDecrypt = async (action: CryptoGen.SaltpackDecryptPayload, logger:
         ]
       } catch (err) {
         logger.error(err)
-        const message = Constants.getStatusCodeMessage(err.code, Constants.Operations.Decrypt, type)
+        const message = Constants.getStatusCodeMessage(err, Constants.Operations.Encrypt, type)
         return CryptoGen.createOnOperationError({
           errorMessage: new HiddenString(message),
           operation: Constants.Operations.Decrypt,
@@ -348,7 +344,7 @@ const saltpackDecrypt = async (action: CryptoGen.SaltpackDecryptPayload, logger:
         ]
       } catch (err) {
         logger.error(err)
-        const message = Constants.getStatusCodeMessage(err.code, Constants.Operations.Decrypt, type)
+        const message = Constants.getStatusCodeMessage(err, Constants.Operations.Decrypt, type)
         return CryptoGen.createOnOperationError({
           errorMessage: new HiddenString(message),
           operation: Constants.Operations.Decrypt,
@@ -375,10 +371,7 @@ const saltpackSign = async (
     case 'file': {
       try {
         const signedFilename = await RPCTypes.saltpackSaltpackSignFileRpcPromise(
-          {
-            destinationDir: '',
-            filename: input.stringValue(),
-          },
+          {filename: input.stringValue()},
           Constants.signFileWaitingKey
         )
         return CryptoGen.createOnOperationSuccess({
@@ -391,7 +384,7 @@ const saltpackSign = async (
         })
       } catch (err) {
         logger.error(err)
-        const message = Constants.getStatusCodeMessage(err.code, Constants.Operations.Sign, type)
+        const message = Constants.getStatusCodeMessage(err, Constants.Operations.Encrypt, type)
         return CryptoGen.createOnOperationError({
           errorMessage: new HiddenString(message),
           operation: Constants.Operations.Sign,
@@ -414,7 +407,7 @@ const saltpackSign = async (
         })
       } catch (err) {
         logger.error(err)
-        const message = Constants.getStatusCodeMessage(err.code, Constants.Operations.Sign, type)
+        const message = Constants.getStatusCodeMessage(err, Constants.Operations.Encrypt, type)
         return CryptoGen.createOnOperationError({
           errorMessage: new HiddenString(message),
           operation: Constants.Operations.Sign,
@@ -436,10 +429,7 @@ const saltpackVerify = async (action: CryptoGen.SaltpackVerifyPayload, logger: S
     case 'file': {
       try {
         const result = await RPCTypes.saltpackSaltpackVerifyFileRpcPromise(
-          {
-            destinationDir: '',
-            signedFilename: input.stringValue(),
-          },
+          {signedFilename: input.stringValue()},
           Constants.verifyFileWaitingKey
         )
         const {verifiedFilename, sender, verified} = result
@@ -459,7 +449,7 @@ const saltpackVerify = async (action: CryptoGen.SaltpackVerifyPayload, logger: S
         ]
       } catch (err) {
         logger.error(err)
-        const message = Constants.getStatusCodeMessage(err.code, Constants.Operations.Verify, type)
+        const message = Constants.getStatusCodeMessage(err, Constants.Operations.Encrypt, type)
         return CryptoGen.createOnOperationError({
           errorMessage: new HiddenString(message),
           operation: Constants.Operations.Verify,
@@ -489,7 +479,7 @@ const saltpackVerify = async (action: CryptoGen.SaltpackVerifyPayload, logger: S
         ]
       } catch (err) {
         logger.error(err)
-        const message = Constants.getStatusCodeMessage(err.code, Constants.Operations.Verify, type)
+        const message = Constants.getStatusCodeMessage(err, Constants.Operations.Encrypt, type)
         return CryptoGen.createOnOperationError({
           errorMessage: new HiddenString(message),
           operation: Constants.Operations.Verify,
