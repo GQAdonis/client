@@ -166,7 +166,6 @@ helpers.rootLinuxNode(env, {
         sh "make gen-deps"
         dependencyFiles = [
           linux: sh(returnStdout: true, script: "cat .go_package_deps_linux"),
-          darwin: sh(returnStdout: true, script: "cat .go_package_deps_darwin"),
           windows: sh(returnStdout: true, script: "cat .go_package_deps_windows"),
         ]
       }
