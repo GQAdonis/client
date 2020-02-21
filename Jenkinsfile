@@ -519,20 +519,6 @@ def testGoBuilds(prefix, packagesToTest) {
       timeout(activity: true, time: 360, unit: 'SECONDS') {
         sh "go list -f '{{.Dir}}' ./...  | fgrep -v kbfs | fgrep -v protocol | xargs realpath --relative-to=. | xargs golangci-lint run --new-from-rev ${BASE_COMMIT_HASH} --deadline 5m0s"
       }
-
-      println("Running golangci-lint for dead code")
-      timeout(activity: true, time: 360, unit: 'SECONDS') {
-        def diffFileList = getDiffFileList()
-        def diffPackageList = sh(returnStdout: true, script: "bash -c \"set -o pipefail; echo '${diffFileList}' | { grep '^go\\/' || true; } | { grep -v 'go/revision' || true; } | { grep -v 'go/vendor' || true; } | { grep -v 'go/Makefile' || true; } | sed 's/^go\\///' | sed 's/^\\(.*\\)\\/[^\\/]*\$/\\1/' | sort | uniq\"").trim().split()
-        diffPackageList.each { pkg ->
-          dir(pkg) {
-            // Ignore the exit code 5, which indicates that there were
-            // no files to analyze -- that's expected if the files were
-            // all tagged for a different platform.
-            sh 'golangci-lint run --no-config --disable-all --enable=deadcode --deadline 5m0s || test $? -eq 5'
-          }
-        }
-      }
     }
 
     // Windows `gofmt` pukes on CRLF.
