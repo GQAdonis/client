@@ -804,10 +804,43 @@ def testGoTestSuite(prefix, packagesToTest) {
     parallelTests << testBatch
   }
   parallelTests << specialTests
-  helpers.waitForURL(prefix, env.KEYBASE_SERVER_URI)
+  waitForURL(prefix, env.KEYBASE_SERVER_URI)
   parallelTests.each { batch ->
     parallel(batch)
   }
+  }
+}
+
+def waitForURL(prefix, url) {
+  def waitFor = 600;
+  if (isUnix()) {
+    sh """ bash -c '
+      slept=0
+      while [[ "\$slept" -lt "${waitFor}" ]]; do
+        curl -s -o /dev/null ${url} && echo "Connected to ${url} after waiting \$slept times" && exit 0;
+        sleep 1;
+        ((slept++));
+      done;
+      echo "Unable to connect to ${url} after waiting ${waitFor} times";
+      exit 1;
+    ' """
+  } else {
+    bat """
+      powershell.exe -c "& { \
+        \$slept=0; \
+        do { \
+          curl.exe --silent ${url} >\$null; \
+          if (\$?) { \
+            echo \\"Connected to ${url} after waiting \$slept times\\"; \
+            exit 0; \
+          } \
+          sleep 1; \
+          \$slept++; \
+        } while (\$slept -lt ${waitFor}); \
+        echo \\"Unable to connect to ${url} after waiting \$slept times\\"; \
+        exit 1; \
+      }"
+    """
   }
 }
 
