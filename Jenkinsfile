@@ -766,46 +766,44 @@ def testGoTestSuite(prefix, packagesToTest) {
     }
     return false
   }
+  stage("Setup Test Suite") {
   packagesToTest.each { pkg, _ ->
     def testSpec = getPackageTestSpec(pkg)
     if (!testSpec) {
       return
     }
 
-    println "Building tests for ${testSpec.dirPath}"
-    dir(testSpec.dirPath) {
-      def testBinary = "${testSpec.name}.test"
-      def test = {
-        sh "go test -i"
-        sh "go test -c ${testSpec.flags} -o ${testBinary}"
+    def testBinary = "${testSpec.name}.test"
+    def test = {
+      println "Building tests for ${testSpec.dirPath}"
+      dir(testSpec.dirPath) {
+        sh "go test -vet=off -c ${testSpec.flags} -o ${testBinary}"
         // Only run the test if a test binary should have been produced.
         if (fileExists(testBinary)) {
-          dir(testSpec.dirPath) {
-            withCredentials([
-              [$class: 'StringBinding', credentialsId: 'citogo-flake-webhook', variable : 'CITOGO_FLAKE_WEBHOOK'],
-              [$class: 'StringBinding', credentialsId: 'citogo-aws-secret-access-key', variable : 'CITOGO_AWS_SECRET_ACCESS_KEY'],
-              [$class: 'StringBinding', credentialsId: 'citogo-aws-access-key-id', variable : 'CITOGO_AWS_ACCESS_KEY_ID'],
-              [$class: 'StringBinding', credentialsId: 'citogo-master-fail-webhook', variable : 'CITOGO_MASTER_FAIL_WEBHOOK']
-            ]) {
-              println "Running tests for ${testSpec.dirPath}"
-              def t = getOverallTimeout(testSpec)
-              timeout(activity: true, time: t.time, unit: t.unit) {
-                sh """citogo --flakes 3 --fails 3 --build-id ${env.BUILD_ID} --branch ${env.BRANCH_NAME}
-                      --prefix ${testSpec.dirPath} --s3bucket ci-fail-logs --build-url ${env.BUILD_URL}
-                      --no-compile --test-binary ./${testBinary} --timeout 150s ${testSpec.citogo_extra || ''}"""
-              }
+          withCredentials([
+            [$class: 'StringBinding', credentialsId: 'citogo-flake-webhook', variable : 'CITOGO_FLAKE_WEBHOOK'],
+            [$class: 'StringBinding', credentialsId: 'citogo-aws-secret-access-key', variable : 'CITOGO_AWS_SECRET_ACCESS_KEY'],
+            [$class: 'StringBinding', credentialsId: 'citogo-aws-access-key-id', variable : 'CITOGO_AWS_ACCESS_KEY_ID'],
+            [$class: 'StringBinding', credentialsId: 'citogo-master-fail-webhook', variable : 'CITOGO_MASTER_FAIL_WEBHOOK']
+          ]) {
+            println "Running tests for ${testSpec.dirPath}"
+            def t = getOverallTimeout(testSpec)
+            timeout(activity: true, time: t.time, unit: t.unit) {
+              sh "citogo --flakes 3 --fails 3 --build-id ${env.BUILD_ID} --branch ${env.BRANCH_NAME} --prefix ${testSpec.dirPath} --s3bucket ci-fail-logs --build-url ${env.BUILD_URL} --no-compile --test-binary ./${testBinary} --timeout 150s ${testSpec.citogo_extra || ''}"
             }
           }
         }
       }
-      if (testSpec.name in specialTestFilter) {
-        specialTests["${prefix}${testSpec.name}"] = test
-      } else {
-        tests["${prefix}${testSpec.name}"] = test
-      }
+    }
+    if (testSpec.name in specialTestFilter) {
+      specialTests["${prefix}${testSpec.name}"] = test
+    } else {
+      tests["${prefix}${testSpec.name}"] = test
     }
   }
+  }
 
+  stage("Run Test Suite") {
   // Schedule the tests
   def parallelTests = []
   def testBatch = [:]
@@ -823,6 +821,7 @@ def testGoTestSuite(prefix, packagesToTest) {
   helpers.waitForURL(prefix, env.KEYBASE_SERVER_URI)
   parallelTests.each { batch ->
     parallel(batch)
+  }
   }
 }
 
